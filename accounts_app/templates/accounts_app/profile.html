@@ -10,7 +10,7 @@
                 id="edit_profile_form"
                 hx-post="{% url 'home' %}"
                 hx-trigger="submit"
-                hx-swap="multi:#edit_profile_form:outerHTML,h1:outerHTML"
+                hx-swap="multi:#edit_profile_form:outerHTML,#edit_profile_header:outerHTML,#navbar_account:outerHTML"
                 hx-ext="multi"
             >
                 {% csrf_token %}
