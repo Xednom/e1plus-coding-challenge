@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
+from django.utils.translation import gettext as _
 
 from accounts_app.forms import EditUserForm, InviteUserForm
 
@@ -15,5 +17,7 @@ class ProfileView(LoginRequiredMixin, View):
 
         if form.is_valid():
             form.save()
-
+            messages.success(request, _("User updated successfully"))
+        else:
+            messages.error(request, _("Error updating user"))
         return render(request, "accounts_app/profile.html", {"form": form, "invite_user_form": invite_user_form})
