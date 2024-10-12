@@ -26,6 +26,6 @@ class UserInvitation(models.Model):
         send_mail(
             "You have been invited to join our platform",
             f"Click here to join: { settings.SENDING_DOMAIN }/invite/{self.id}",
-            "Kind regards, The Team",
+            settings.EMAIL_HOST_USER,
             [self.email],
         )
