@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from django.contrib import messages
+from django.conf import settings
 
 from accounts_app.forms import InviteUserForm
 from accounts_app.models import UserInvitation
@@ -14,16 +17,35 @@ class InviteUserView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         form = InviteUserForm(request.POST)
-        
+        now = timezone.now()
+
         if form.is_valid():
+            email = form.cleaned_data["email"]
+
             # We could further improve this here to first check if an invitation for this email already exists and is not expired
-            UserInvitation.objects.filter(email=form.cleaned_data["email"]).delete()
+            existing_invite = UserInvitation.objects.filter(
+                email=email, expires_at__gte=now
+            ).first()
 
-            invitation = UserInvitation(email=form.cleaned_data["email"], invited_by=request.user)
-            invitation.save()
+            if existing_invite:
+                messages.error(request, "An invitation for this email already exists.")
+            else:
+                # Delete the expired invitation for this email
+                UserInvitation.objects.filter(email=email).delete()
 
-            invitation.send_invitation_email()
+                invitation = UserInvitation(email=email, invited_by=request.user)
+                invitation.save()
+                invitation.send_invitation_email()
 
-            return render(request, "accounts_app/profile.html", {"invite_user_form": form, "invited": True})
+                messages.success(request, "Invitation sent successfully.")
+
+            return render(
+                request,
+                "accounts_app/profile.html",
+                {"invite_user_form": form, "invited": True},
+            )
         else:
-            return render(request, "accounts_app/profile.html", {"invite_user_form": form})
+            messages.error(request, "Error sending invitation.")
+            return render(
+                request, "accounts_app/profile.html", {"invite_user_form": form}
+            )
